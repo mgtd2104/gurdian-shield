@@ -218,7 +218,7 @@ function App() {
     <div className="app">
       {/* Background video */}
       <video autoPlay muted loop playsInline className="background-video">
-        <source src="/background-video.mp4" type="video/mp4" />
+        <source src="background-video.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 
@@ -226,7 +226,7 @@ function App() {
       <header className="header">
         <div className="header-content">
           <div className="logo-section">
-            <img src="/logo.png" alt="Guardian Shield Logo" className="logo" />
+            <img src="logo.png" alt="Guardian Shield Logo" className="logo" />
             <div className="title-section">
               <h1>🛡️ Guardian Shield</h1>
               <p>Your Complete Security Scanning & Analysis Platform</p>
