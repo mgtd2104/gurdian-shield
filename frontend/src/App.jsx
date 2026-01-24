@@ -88,7 +88,7 @@ function App() {
       </main>
 
       <footer className="footer">
-        <p>&copy; 2026 Guardian Shield - Your Security, Our Priority</p>
+        <p>&copy; 2026 Guardian Shield - Your Security, Our Priority-by: mohit</p>
       </footer>
     </div>
   );
