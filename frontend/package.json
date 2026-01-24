@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "homepage": "https://mgtd2104.github.io/gurdian-shield",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
