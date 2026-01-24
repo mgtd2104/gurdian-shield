@@ -6,6 +6,7 @@ import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import scannerRoutes from './routes/scanner.js';
 import passwordRoutes from './routes/password.js';
+import passwordManagerRoutes from './routes/passwordManager.js';
 import chatRoutes from './routes/chat.js';
 
 dotenv.config();
@@ -30,6 +31,7 @@ app.set('io', io);
 // Routes
 app.use('/api/scanner', scannerRoutes);
 app.use('/api/password', passwordRoutes);
+app.use('/api/password-manager', passwordManagerRoutes);
 app.use('/api/chat', chatRoutes);
 
 // Health check

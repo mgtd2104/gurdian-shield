@@ -3,6 +3,7 @@ import './App.css';
 import VulnerabilityScanner from './components/VulnerabilityScanner';
 import VirusScanner from './components/VirusScanner';
 import PasswordAnalyzer from './components/PasswordAnalyzer';
+import PasswordManager from './components/PasswordManager';
 import Chatbot from './components/Chatbot';
 
 function App() {
@@ -16,6 +17,8 @@ function App() {
         return <VirusScanner />;
       case 'password':
         return <PasswordAnalyzer />;
+      case 'password-manager':
+        return <PasswordManager />;
       case 'chat':
         return <Chatbot />;
       default:
@@ -25,10 +28,25 @@ function App() {
 
   return (
     <div className="app">
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="background-video"
+      >
+        <source src="/background-video.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
       <header className="header">
         <div className="header-content">
-          <h1>🛡️ Guardian Shield</h1>
-          <p>Your Complete Security Scanning & Analysis Platform</p>
+          <div className="logo-section">
+            <img src="/logo.png" alt="Guardian Shield Logo" className="logo" />
+            <div className="title-section">
+              <h1>🛡️ Guardian Shield</h1>
+              <p>Your Complete Security Scanning & Analysis Platform</p>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -50,6 +68,12 @@ function App() {
           onClick={() => setActiveTab('password')}
         >
           🔐 Password Analyzer
+        </button>
+        <button
+          className={`nav-btn ${activeTab === 'password-manager' ? 'active' : ''}`}
+          onClick={() => setActiveTab('password-manager')}
+        >
+          🔑 Password Manager
         </button>
         <button
           className={`nav-btn ${activeTab === 'chat' ? 'active' : ''}`}

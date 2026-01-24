@@ -32,6 +32,18 @@ export const passwordAPI = {
     api.get('/password/generate', { params: { length, special } })
 };
 
+// Password Manager services
+export const passwordManagerAPI = {
+  addEntry: (userId, site, username, password, notes = '') =>
+    api.post('/password-manager/add', { userId, site, username, password, notes }),
+  getEntries: (userId) => api.get(`/password-manager/entries/${userId}`),
+  getEntry: (userId, entryId) => api.get(`/password-manager/entry/${userId}/${entryId}`),
+  updateEntry: (entryId, userId, site, username, password, notes) =>
+    api.put(`/password-manager/update/${entryId}`, { userId, site, username, password, notes }),
+  deleteEntry: (userId, entryId) => api.delete(`/password-manager/delete/${userId}/${entryId}`),
+  searchEntries: (userId, query) => api.get(`/password-manager/search/${userId}`, { params: { q: query } })
+};
+
 // Chatbot services
 export const chatAPI = {
   sendMessage: (message, scanResult = null) =>
