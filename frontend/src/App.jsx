@@ -35,13 +35,14 @@ function App() {
         playsInline
         className="background-video"
       >
-        <source src="/gurdian-shield/background-video.mp4" type="video/mp4" />
+        <source src="/background-video.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
+
       <header className="header">
         <div className="header-content">
           <div className="logo-section">
-           <img src="/gurdian-shield/logo.png" alt="Guardian Shield Logo" className="logo" />
+            <img src="/logo.png" alt="Guardian Shield Logo" className="logo" />
             <div className="title-section">
               <h1>🛡️ Guardian Shield</h1>
               <p>Your Complete Security Scanning & Analysis Platform</p>
@@ -88,7 +89,7 @@ function App() {
       </main>
 
       <footer className="footer">
-        <p>&copy; 2026 Guardian Shield - Your Security, Our Priority-by: mohit</p>
+        <p>&copy; 2026 Guardian Shield - Your Security, Our Priority - by: mohit</p>
       </footer>
     </div>
   );
