@@ -1,0 +1,26 @@
+{
+  "name": "guardian-shield-backend",
+  "version": "1.0.0",
+  "description": "Security scanning platform with vulnerability, virus, and password analysis",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-fileupload": "^1.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "mongoose": "^7.0.0",
+    "bcryptjs": "^2.4.3",
+    "joi": "^17.9.1",
+    "axios": "^1.3.0",
+    "socket.io": "^4.6.1",
+    "zod": "^3.21.4"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}
