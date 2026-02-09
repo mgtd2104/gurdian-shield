@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/Chatbot.css';
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace(/\/$/, '');
+const RUNTIME_API_URL = (typeof window !== 'undefined' && window.__API_URL__) ? String(window.__API_URL__) : '';
+const API_BASE = (RUNTIME_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace(/\/$/, '');
 
 export default function Chatbot() {
   const [messages, setMessages] = useState([
