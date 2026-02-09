@@ -1,3 +1,15 @@
+import fs from 'fs';
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  fs.writeFileSync('error.log', `Uncaught Exception: ${err.message}\n${err.stack}\n`, { flag: 'a' });
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection:', reason);
+  fs.writeFileSync('error.log', `Unhandled Rejection: ${reason}\n`, { flag: 'a' });
+});
+
 import express from 'express';
 import cors from 'cors';
 import fileUpload from 'express-fileupload';
@@ -15,7 +27,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: 'http://localhost:5173',
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176'],
     methods: ['GET', 'POST']
   }
 });
@@ -48,7 +60,19 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  // Keep alive check
+  setInterval(() => {
+    // console.log('Heartbeat');
+  }, 10000);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });

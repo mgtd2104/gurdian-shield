@@ -8,16 +8,22 @@ router.post('/message', async (req, res) => {
   try {
     const { message, scanResult } = req.body;
 
-    if (!message) {
-      return res.status(400).json({ error: 'Message is required' });
+    if (!message && !scanResult) {
+      return res.status(400).json({ error: 'Message or scanResult is required' });
     }
 
-    // Get advice based on message
-    const advice = await chatbot.getAdvice(message);
+    let response;
+    // If scanResult is present, prioritize generating scan advice
+    if (scanResult) {
+       response = await chatbot.generateScanResponse(scanResult);
+    } else {
+       // Otherwise get general advice
+       response = await chatbot.getAdvice(message);
+    }
 
     res.json({
       success: true,
-      response: advice
+      response: response
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -47,7 +53,7 @@ router.post('/remediate', async (req, res) => {
 // Get knowledge base topics
 router.get('/topics', async (req, res) => {
   try {
-    const topics = Object.keys(chatbot.knowledgeBase);
+    const topics = Object.keys(chatbot.remediationDB || {});
 
     res.json({
       success: true,

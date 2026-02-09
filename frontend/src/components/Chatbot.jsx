@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { chatAPI } from '../services/api';
 import '../styles/Chatbot.css';
+
+const API_BASE = 'http://localhost:5001/api';
 
 export default function Chatbot() {
   const [messages, setMessages] = useState([
@@ -18,8 +19,11 @@ export default function Chatbot() {
 
   const fetchTopics = async () => {
     try {
-      const response = await chatAPI.getTopics();
-      setTopics(response.data.topics);
+      const res = await fetch(`${API_BASE}/chat/topics`);
+      const data = await res.json();
+      if (data?.topics) {
+        setTopics(data.topics);
+      }
     } catch (err) {
       console.error('Failed to fetch topics');
     }
@@ -37,8 +41,13 @@ export default function Chatbot() {
     setLoading(true);
 
     try {
-      const response = await chatAPI.sendMessage(message);
-      const botMessage = response.data.response;
+      const res = await fetch(`${API_BASE}/chat/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
+      const data = await res.json();
+      const botMessage = data?.response || {};
 
       let botContent = botMessage.message || 'I\'m not sure about that topic.';
 
@@ -78,20 +87,23 @@ export default function Chatbot() {
             <div key={idx} className={`message ${msg.type}`}>
               <div className="message-content">
                 {msg.type === 'bot' ? (
-                  <div dangerouslyInnerHTML={{
-                    __html: msg.content
-                      .split('\n')
-                      .map(line => {
-                        if (line.startsWith('**')) {
-                          return `<strong>${line.replace(/\*\*/g, '')}</strong>`;
-                        }
-                        if (line.startsWith('•')) {
-                          return `<div class="list-item">${line}</div>`;
-                        }
-                        return line;
-                      })
-                      .join('<br>')
-                  }} />
+                  <div className="bot-message-text">
+                    {msg.content.split('\n').map((line, i) => {
+                      if (line.startsWith('**')) {
+                         // Header
+                         return <strong key={i} className="bot-header">{line.replace(/\*\*/g, '')}</strong>;
+                      } else if (line.startsWith('•')) {
+                         // List item
+                         return <div key={i} className="bot-list-item">{line}</div>;
+                      } else if (line.trim() === '') {
+                         // Empty line
+                         return <br key={i} />;
+                      } else {
+                         // Regular text
+                         return <p key={i} className="bot-text">{line}</p>;
+                      }
+                    })}
+                  </div>
                 ) : (
                   msg.content
                 )}

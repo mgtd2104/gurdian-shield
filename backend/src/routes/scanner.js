@@ -1,6 +1,9 @@
 import express from 'express';
 import { scanForVulnerabilities, scanForViruses } from '../services/scannerService.js';
 import { ScanResult, scanStorage } from '../models/ScanResult.js';
+import os from 'os';
+import path from 'path';
+import fs from 'fs';
 
 const router = express.Router();
 
@@ -35,7 +38,13 @@ router.post('/virus', async (req, res) => {
     }
 
     const file = req.files.file;
-    const tempPath = `/tmp/${Date.now()}_${file.name}`;
+    // Use local temp directory to avoid OS path issues
+    const tempDir = path.join(process.cwd(), 'temp');
+    // Ensure temp dir exists (in case it wasn't created)
+    if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+    }
+    const tempPath = path.join(tempDir, `${Date.now()}_${file.name}`);
 
     await file.mv(tempPath);
     const result = await scanForViruses(tempPath);
