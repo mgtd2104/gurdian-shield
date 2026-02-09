@@ -3,5 +3,5 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/gurdian-shield/',   // 👈 must match your repo name exactly
+  base: process.env.VERCEL ? '/' : '/gurdian-shield/',
 })
