@@ -12,6 +12,8 @@ export default function PasswordManager() {
   const [success, setSuccess] = useState('');
   const [showPasswords, setShowPasswords] = useState({});
 
+  const storageKey = `guardianShield:passwordManager:${userId}`;
+
   // Form state
   const [formData, setFormData] = useState({
     site: '',
@@ -27,10 +29,19 @@ export default function PasswordManager() {
   const loadEntries = async () => {
     try {
       const response = await passwordManagerAPI.getEntries(userId);
-      setEntries(response.data.entries);
+      const apiEntries = response?.data?.entries;
+      if (Array.isArray(apiEntries)) {
+        setEntries(apiEntries);
+      } else {
+        const local = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        setEntries(Array.isArray(local) ? local : []);
+        setError('Password Manager API unavailable. Using local storage mode.');
+      }
       setError('');
     } catch (err) {
-      setError('Failed to load password entries');
+      const local = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      setEntries(Array.isArray(local) ? local : []);
+      setError('Password Manager API unavailable. Using local storage mode.');
     }
   };
 
@@ -49,7 +60,39 @@ export default function PasswordManager() {
       setEditingEntry(null);
       loadEntries();
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to save entry');
+      const now = new Date().toISOString();
+      const local = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      const list = Array.isArray(local) ? local : [];
+
+      if (editingEntry) {
+        const updated = list.map((e) =>
+          e.id === editingEntry.id
+            ? { ...e, ...formData, updatedAt: now }
+            : e
+        );
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+        setEntries(updated);
+        setSuccess('Password entry updated (local mode)');
+      } else {
+        const entry = {
+          id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+          site: formData.site,
+          username: formData.username,
+          password: formData.password,
+          notes: formData.notes,
+          createdAt: now,
+          updatedAt: now
+        };
+        const updated = [entry, ...list];
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+        setEntries(updated);
+        setSuccess('Password entry added (local mode)');
+      }
+
+      setFormData({ site: '', username: '', password: '', notes: '' });
+      setShowForm(false);
+      setEditingEntry(null);
+      setError('');
     }
   };
 
@@ -67,7 +110,20 @@ export default function PasswordManager() {
       setShowForm(true);
       setError('');
     } catch (err) {
-      setError('Failed to load entry for editing');
+      const entry = entries.find((e) => e.id === entryId);
+      if (entry) {
+        setFormData({
+          site: entry.site,
+          username: entry.username,
+          password: entry.password,
+          notes: entry.notes
+        });
+        setEditingEntry({ id: entryId });
+        setShowForm(true);
+        setError('');
+      } else {
+        setError('Failed to load entry for editing');
+      }
     }
   };
 
@@ -78,7 +134,13 @@ export default function PasswordManager() {
       setSuccess('Password entry deleted successfully');
       loadEntries();
     } catch (err) {
-      setError('Failed to delete entry');
+      const local = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      const list = Array.isArray(local) ? local : [];
+      const updated = list.filter((e) => e.id !== entryId);
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+      setEntries(updated);
+      setSuccess('Password entry deleted (local mode)');
+      setError('');
     }
   };
 
@@ -96,10 +158,22 @@ export default function PasswordManager() {
     }
     try {
       const response = await passwordManagerAPI.searchEntries(userId, searchQuery);
-      setEntries(response.data.entries);
+      const apiEntries = response?.data?.entries;
+      if (Array.isArray(apiEntries)) {
+        setEntries(apiEntries);
+      } else {
+        const local = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        const list = Array.isArray(local) ? local : [];
+        const q = searchQuery.toLowerCase();
+        setEntries(list.filter((e) => `${e.site} ${e.username} ${e.notes}`.toLowerCase().includes(q)));
+      }
       setError('');
     } catch (err) {
-      setError('Search failed');
+      const local = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      const list = Array.isArray(local) ? local : [];
+      const q = searchQuery.toLowerCase();
+      setEntries(list.filter((e) => `${e.site} ${e.username} ${e.notes}`.toLowerCase().includes(q)));
+      setError('');
     }
   };
 
