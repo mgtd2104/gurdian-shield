@@ -29,6 +29,7 @@ def handle_file_too_large(_e):
 @app.route('/scan-file', methods=['POST'])
 def scan_file():
     try:
+        os.makedirs('temp', exist_ok=True)
         file = request.files['file']
         filename = secure_filename(file.filename or 'upload.bin')
         abs_path = os.path.abspath(os.path.join(UPLOAD_FOLDER, filename))
