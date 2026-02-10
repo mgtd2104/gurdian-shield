@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const formidable = require("formidable");
-const fs = require("fs");
+const { Writable } = require("stream");
 
 const MALWARE_HASHES = [
   "e99a18c428cb38d5f260853678922e03",
@@ -34,32 +34,57 @@ module.exports = async (req, res) => {
     return res.json({ error: "Method not allowed" });
   }
 
+  let uploadedBuffer = null;
+
   const form = formidable({
     multiples: false,
-    maxFileSize: 50 * 1024 * 1024
+    maxFileSize: 50 * 1024 * 1024,
+    fileWriteStreamHandler: () => {
+      const chunks = [];
+      let total = 0;
+
+      return new Writable({
+        write(chunk, _enc, cb) {
+          total += chunk.length;
+          if (total > 50 * 1024 * 1024) {
+            cb(new Error('File exceeds the 50MB limit'));
+            return;
+          }
+          chunks.push(Buffer.from(chunk));
+          cb();
+        },
+        final(cb) {
+          uploadedBuffer = Buffer.concat(chunks);
+          cb();
+        }
+      });
+    }
   });
 
-  form.parse(req, async (err, fields, files) => {
+  form.parse(req, async (err, _fields, files) => {
     try {
       if (err) {
         const status = typeof err?.httpCode === 'number' ? err.httpCode : (typeof err?.statusCode === 'number' ? err.statusCode : 400);
-        res.statusCode = status;
-        const isTooLarge = status === 413 || String(err?.message || '').toLowerCase().includes('maxfilesize');
-        return res.json({ success: false, error: isTooLarge ? 'File exceeds the 50MB limit' : String(err.message || err) });
+        const msg = String(err?.message || err);
+        const isTooLarge = status === 413 || msg.toLowerCase().includes('maxfilesize') || msg.toLowerCase().includes('50mb');
+        res.statusCode = isTooLarge ? 413 : status;
+        return res.json({ success: false, error: isTooLarge ? 'File exceeds the 50MB limit' : msg });
       }
 
       const file = files?.file;
       if (!file) {
         res.statusCode = 400;
-        return res.json({ error: "No file uploaded" });
+        return res.json({ success: false, error: "No file uploaded" });
       }
 
-      const filePath = file.filepath || file.path;
       const originalFilename = file.originalFilename || file.name || "uploaded";
-      const buf = fs.readFileSync(filePath);
+      if (!uploadedBuffer || !Buffer.isBuffer(uploadedBuffer)) {
+        res.statusCode = 500;
+        return res.json({ success: false, error: "Failed to read uploaded file into memory" });
+      }
 
       const threats = [];
-      const { sha256, md5 } = hashBuffer(buf);
+      const { sha256, md5 } = hashBuffer(uploadedBuffer);
       if (MALWARE_HASHES.includes(sha256) || MALWARE_HASHES.includes(md5)) {
         threats.push({
           type: "Known Malware",
@@ -69,7 +94,7 @@ module.exports = async (req, res) => {
         });
       }
 
-      const ent = entropy(buf);
+      const ent = entropy(uploadedBuffer);
       if (ent > 7.5) {
         threats.push({
           type: "High Entropy",

@@ -34,21 +34,17 @@ def scan_file():
 
         file = request.files['file']
 
-        upload_folder = os.path.abspath(os.path.join(os.getcwd(), 'backend', 'temp'))
-        if not os.path.exists(upload_folder):
-            os.makedirs(upload_folder)
-
         original_name = file.filename or 'upload.bin'
 
         try:
-            file_bytes = file.read()
+            file_content = file.read()
         except Exception as read_error:
-            return jsonify({
-                "success": False,
-                "error": f"Failed to read uploaded file from memory: {str(read_error)}",
-            }), 500
+            return jsonify({"success": False, "error": f"Failed to read uploaded file from memory: {str(read_error)}"}), 500
 
-        file_hash = hashlib.sha256(file_bytes).hexdigest()
+        if not isinstance(file_content, (bytes, bytearray)):
+            return jsonify({"success": False, "error": "Invalid uploaded file content"}), 500
+
+        file_hash = hashlib.sha256(file_content).hexdigest()
 
         known_bad_hashes = set(MALWARE_SHA256_HASHES)
         known_bad_hashes.add('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')

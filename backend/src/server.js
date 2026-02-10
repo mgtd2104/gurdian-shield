@@ -57,9 +57,10 @@ async function handleScanFile(req, res) {
     }
 
     const file = req.files.file;
-    const buf = Buffer.isBuffer(file.data)
-      ? file.data
-      : await fs.promises.readFile(path.resolve(String(file.tempFilePath || '')));
+    const buf = Buffer.isBuffer(file.data) ? file.data : undefined;
+    if (!buf) {
+      return res.status(500).json({ status: 'error', error: 'Uploaded file data is unavailable in memory' });
+    }
     const { createHash } = await import('crypto');
     const sha256 = createHash('sha256').update(buf).digest('hex');
 
