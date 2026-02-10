@@ -8,7 +8,7 @@ from werkzeug.exceptions import RequestEntityTooLarge
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 
-CORS(app, resources={r"/scan-file": {"origins": "*"}})
+CORS(app, resources={r"/scan-file": {"origins": "*"}, r"/api/*": {"origins": "*"}})
 
 MALWARE_SHA256_HASHES = {
     "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f",
@@ -21,6 +21,7 @@ def handle_file_too_large(_e):
 
 
 @app.route('/scan-file', methods=['POST'])
+@app.route('/api/scan-file', methods=['POST'])
 def scan_file():
     try:
         if 'file' not in request.files:
@@ -66,6 +67,18 @@ def scan_file():
         return jsonify({"error": str(e)}), 413
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/health', methods=['GET'])
+def api_health():
+    return jsonify({"ok": True, "service": "guardian-shield-flask"}), 200
+
+
+@app.route('/api/version', methods=['GET'])
+def api_version():
+    sha = os.environ.get('VERCEL_GIT_COMMIT_SHA') or os.environ.get('GITHUB_SHA')
+    ref = os.environ.get('VERCEL_GIT_COMMIT_REF')
+    return jsonify({"ok": True, "sha": sha, "ref": ref}), 200
 
 
 if __name__ == '__main__':

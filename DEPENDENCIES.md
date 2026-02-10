@@ -1,0 +1,39 @@
+Guardian Shield - Security Scanning Platform
+==============================================
+
+Backend Dependencies (Node.js)
+------------------------------
+The following Node.js packages are required for the backend logic (replacing Python's requests/bs4/hashlib):
+
+1. axios
+   - Purpose: HTTP client for making requests (equivalent to Python 'requests').
+   - Used in: Web Vulnerability Scanner (Module 1) to fetch pages and test SQLi/XSS.
+
+2. cheerio
+   - Purpose: Fast, flexible, and lean implementation of core jQuery designed specifically for the server. Used for parsing HTML (equivalent to Python 'BeautifulSoup').
+   - Used in: Web Vulnerability Scanner (Module 1) to parse forms and scripts.
+
+3. crypto (Built-in Node.js module)
+   - Purpose: Cryptographic functionality (equivalent to Python 'hashlib').
+   - Used in: File/Virus Scanner (Module 2) for MD5/SHA256 hashing.
+
+4. fs (Built-in Node.js module)
+   - Purpose: File system interaction (equivalent to Python 'os'/'pathlib').
+   - Used in: File/Virus Scanner (Module 2) for file reading and walking directories.
+
+5. express
+   - Purpose: Web framework for the API server.
+
+6. socket.io
+   - Purpose: Real-time bidirectional event-based communication.
+
+7. cors
+   - Purpose: Middleware to enable Cross-Origin Resource Sharing.
+
+Installation
+------------
+To install all dependencies, navigate to the backend directory and run:
+$ npm install
+
+Note: This project uses a Node.js backend instead of Python as per the existing codebase structure.
+
