@@ -3,12 +3,10 @@ import path from 'path';
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
-  fs.writeFileSync('error.log', `Uncaught Exception: ${err.message}\n${err.stack}\n`, { flag: 'a' });
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection:', reason);
-  fs.writeFileSync('error.log', `Unhandled Rejection: ${reason}\n`, { flag: 'a' });
 });
 
 import express from 'express';
@@ -112,6 +110,12 @@ app.use((err, req, res, next) => {
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'Server is running' });
+});
+
+app.get(['/api/version', '/version'], (_req, res) => {
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA || process.env.GITHUB_SHA || null;
+  const ref = process.env.VERCEL_GIT_COMMIT_REF || null;
+  res.json({ ok: true, service: 'guardian-shield-backend', sha, ref, now: new Date().toISOString() });
 });
 
 // Socket.io events for real-time chat
