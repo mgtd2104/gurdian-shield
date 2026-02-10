@@ -174,7 +174,12 @@ Use this secure pattern:
     // Fallback for other vulnerabilities (User Mandated Dictionary Logic)
     vulnerabilities.forEach(vuln => {
         const type = (vuln.type || "").toLowerCase();
-        let fix = "Vulnerability Found. Please investigate manually.";
+        let fix = {
+            message: "Vulnerability Found. Please investigate manually.",
+            prevention: [],
+            examples: [],
+            tools: []
+        };
         
         // Fuzzy match against dictionary keys
         for (const [key, value] of Object.entries(this.remediationDB)) {
@@ -186,10 +191,10 @@ Use this secure pattern:
 
         remediationList.push({
             topic: vuln.type,
-            message: fix,
-            prevention: [fix],
-            examples: [],
-            tools: []
+            message: typeof fix === "string" ? fix : (fix.message || "Vulnerability Found. Please investigate manually."),
+            prevention: Array.isArray(fix.prevention) ? fix.prevention : [],
+            examples: Array.isArray(fix.examples) ? fix.examples : [],
+            tools: Array.isArray(fix.tools) ? fix.tools : []
         });
     });
 

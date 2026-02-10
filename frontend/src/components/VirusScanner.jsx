@@ -9,6 +9,19 @@ export default function VirusScanner() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const formatRemediationMessage = (value) => {
+    if (typeof value === 'string') return value;
+    if (value && typeof value === 'object') {
+      if (typeof value.message === 'string') return value.message;
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return 'Remediation details unavailable.';
+      }
+    }
+    return 'Remediation details unavailable.';
+  };
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -37,6 +50,10 @@ export default function VirusScanner() {
       const data = response?.data;
       if (!data || typeof data !== 'object') {
         throw new Error('Invalid scan response');
+      }
+
+      if (data.success === false) {
+        throw new Error(data.error || 'Scan failed');
       }
 
       setResults({
@@ -93,7 +110,7 @@ export default function VirusScanner() {
 
       {results && (
         <div className="results">
-          <div className={`risk-badge ${results.riskLevel?.toLowerCase()}`}>
+          <div className={`risk-badge ${typeof results.riskLevel === 'string' ? results.riskLevel.toLowerCase() : ''}`}>
             {results.isSafe ? '✅ SAFE' : `⚠️ ${results.riskLevel}`}
           </div>
 
@@ -121,11 +138,11 @@ export default function VirusScanner() {
                       {remediation.remediation.map((item, idx) => (
                           <div key={idx} className="remediation-card">
                               <h4>How to Fix: {item.topic}</h4>
-                              <p>{item.message}</p>
-                              {item.prevention && (
+                              <p>{formatRemediationMessage(item.message)}</p>
+                              {Array.isArray(item.prevention) && item.prevention.length > 0 && (
                                   <ul>
                                       {item.prevention.map((prev, pIdx) => (
-                                          <li key={pIdx}>{prev}</li>
+                                          <li key={pIdx}>{typeof prev === 'string' ? prev : formatRemediationMessage(prev)}</li>
                                       ))}
                                   </ul>
                               )}

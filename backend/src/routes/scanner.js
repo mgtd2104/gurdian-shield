@@ -1,7 +1,6 @@
 import express from 'express';
 import { scanForVulnerabilities, scanForViruses } from '../services/scannerService.js';
 import { ScanResult, scanStorage } from '../models/ScanResult.js';
-import os from 'os';
 import path from 'path';
 import fs from 'fs';
 
@@ -32,6 +31,7 @@ router.post('/vulnerabilities', async (req, res) => {
 
 // Virus Scanner
 router.post('/virus', async (req, res) => {
+  let tempPath;
   try {
     if (!req.files || !req.files.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -44,21 +44,34 @@ router.post('/virus', async (req, res) => {
     if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir, { recursive: true });
     }
-    const tempPath = path.join(tempDir, `${Date.now()}_${file.name}`);
+    tempPath = path.join(tempDir, `${Date.now()}_${file.name}`);
 
     await file.mv(tempPath);
     const result = await scanForViruses(tempPath);
+
+    if (!result || result.success === false) {
+      return res.status(500).json({
+        success: false,
+        fileName: file.name,
+        error: result?.error || 'Virus scan failed'
+      });
+    }
 
     const scanRecord = new ScanResult('virus', file.name, result, result.threats);
     scanStorage.push(scanRecord);
 
     res.json({
-      success: true,
       scanId: scanRecord.id,
-      ...result
+      ...result,
+      fileName: file.name,
+      success: true
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  } finally {
+    if (tempPath) {
+      fs.promises.unlink(tempPath).catch(() => undefined);
+    }
   }
 });
 
