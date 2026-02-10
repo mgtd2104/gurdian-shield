@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const RUNTIME_API_URL = (typeof window !== 'undefined' && window.__API_URL__) ? String(window.__API_URL__) : '';
-const API_BASE = (RUNTIME_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace(/\/$/, '');
+const API_BASE = (RUNTIME_API_URL || import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
 
 const api = axios.create({
   baseURL: API_BASE,
