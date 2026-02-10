@@ -37,8 +37,11 @@ const io = new Server(httpServer, {
 app.use(cors());
 app.use(express.json());
 app.use(fileUpload({
-  limits: { fileSize: 25 * 1024 * 1024 },
+  limits: { fileSize: 50 * 1024 * 1024 },
   abortOnLimit: true,
+  limitHandler: (req, res) => {
+    res.status(413).json({ success: false, error: 'File exceeds the 50MB limit' });
+  },
   useTempFiles: true,
   tempFileDir: path.join(process.cwd(), 'temp'),
   createParentPath: true
@@ -54,8 +57,12 @@ app.use('/api/password-manager', passwordManagerRoutes);
 app.use('/api/chat', chatRoutes);
 
 app.use((err, req, res, next) => {
-  const status = typeof err?.statusCode === 'number' ? err.statusCode : (typeof err?.status === 'number' ? err.status : 500);
-  const message = err?.message || 'Internal server error';
+  const statusFromError = typeof err?.statusCode === 'number'
+    ? err.statusCode
+    : (typeof err?.status === 'number' ? err.status : undefined);
+  const isTooLarge = statusFromError === 413 || String(err?.message || '').toLowerCase().includes('file size limit') || err?.code === 'LIMIT_FILE_SIZE';
+  const status = isTooLarge ? 413 : (statusFromError || 500);
+  const message = isTooLarge ? 'File exceeds the 50MB limit' : (err?.message || 'Internal server error');
   if (res.headersSent) return next(err);
   res.status(status).json({ success: false, error: message });
 });
