@@ -10,9 +10,7 @@ export default function VirusScanner() {
   const [error, setError] = useState('');
 
   const getMaxUploadBytes = () => {
-    const hostname = (typeof window !== 'undefined' && window.location?.hostname) ? window.location.hostname : '';
-    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
-    return isLocal ? 10 * 1024 * 1024 : 4 * 1024 * 1024;
+    return 25 * 1024 * 1024;
   };
 
   const formatRemediationMessage = (value) => {

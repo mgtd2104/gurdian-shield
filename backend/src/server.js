@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
@@ -35,7 +36,13 @@ const io = new Server(httpServer, {
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(fileUpload());
+app.use(fileUpload({
+  limits: { fileSize: 25 * 1024 * 1024 },
+  abortOnLimit: true,
+  useTempFiles: true,
+  tempFileDir: path.join(process.cwd(), 'temp'),
+  createParentPath: true
+}));
 
 // Store io instance for use in routes
 app.set('io', io);

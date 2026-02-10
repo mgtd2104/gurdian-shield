@@ -34,7 +34,10 @@ module.exports = async (req, res) => {
     return res.json({ error: "Method not allowed" });
   }
 
-  const form = formidable({ multiples: false });
+  const form = formidable({
+    multiples: false,
+    maxFileSize: 25 * 1024 * 1024
+  });
 
   form.parse(req, async (err, fields, files) => {
     try {
@@ -97,4 +100,3 @@ module.exports.config = {
     bodyParser: false
   }
 };
-
