@@ -41,7 +41,7 @@ def test_chatbot_sqli():
 def test_file_scanner_eicar():
     print("\n--- Testing File Scanner (EICAR Malware) ---")
     # EICAR Test String
-    eicar_content = b"X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*"
+    eicar_content = b"X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*"
     
     files = {
         'file': ('eicar.com', eicar_content, 'application/octet-stream')
