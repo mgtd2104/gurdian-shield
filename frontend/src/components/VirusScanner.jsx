@@ -34,15 +34,25 @@ export default function VirusScanner() {
 
     try {
       const response = await scannerAPI.scanVirus(file);
-      setResults(response.data);
+      const data = response?.data;
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid scan response');
+      }
+
+      setResults({
+        ...data,
+        threats: Array.isArray(data.threats) ? data.threats : [],
+        threatCount: typeof data.threatCount === 'number' ? data.threatCount : (Array.isArray(data.threats) ? data.threats.length : 0),
+        isSafe: typeof data.isSafe === 'boolean' ? data.isSafe : !(Array.isArray(data.threats) && data.threats.length > 0)
+      });
 
       // Get remediation advice from Chatbot if threats found
-      if (response.data.threats && response.data.threats.length > 0) {
+      if (Array.isArray(data.threats) && data.threats.length > 0) {
         try {
             // Adapt structure for chatbot: expected { vulnerabilities: [{ type: ... }] }
             const scanResultForChat = {
-                ...response.data,
-                vulnerabilities: response.data.threats.map(t => ({ type: t.type }))
+                ...data,
+                vulnerabilities: data.threats.map(t => ({ type: t.type }))
             };
             const chatResponse = await chatAPI.remediate(scanResultForChat);
             setRemediation(chatResponse.data);
@@ -88,11 +98,11 @@ export default function VirusScanner() {
           </div>
 
           <div className="file-info">
-            <p><strong>File:</strong> {results.fileName}</p>
-            <p><strong>Threats Found:</strong> {results.threatCount}</p>
+            <p><strong>File:</strong> {results.fileName || file?.name || 'Uploaded file'}</p>
+            <p><strong>Threats Found:</strong> {typeof results.threatCount === 'number' ? results.threatCount : (results.threats?.length || 0)}</p>
           </div>
 
-          {results.threats && results.threats.length > 0 ? (
+          {Array.isArray(results.threats) && results.threats.length > 0 ? (
             <div className="threats">
               <h3>Detected Threats</h3>
               {results.threats.map((threat, idx) => (
