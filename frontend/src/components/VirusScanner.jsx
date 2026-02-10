@@ -36,7 +36,7 @@ function VirusScannerInner() {
   const [error, setError] = useState('');
 
   const getMaxUploadBytes = () => {
-    return 50 * 1024 * 1024;
+    return 16 * 1024 * 1024;
   };
 
   const formatRemediationMessage = (value) => {
@@ -112,7 +112,7 @@ function VirusScannerInner() {
 
     } catch (err) {
       if (err?.response?.status === 413) {
-        setError('File is too large to scan.');
+        setError('File is too large to scan (16MB limit).');
         return;
       }
       const serverPayload = err?.response?.data;
