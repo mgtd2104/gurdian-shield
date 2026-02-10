@@ -6,8 +6,6 @@
     "api/**/*.py": { "runtime": "python3.11" }
   },
   "rewrites": [
-    { "source": "/api/scan-file", "destination": "/api/scan-file.py" },
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/api/(.*)", "destination": "/api/$1" }
   ]
 }
