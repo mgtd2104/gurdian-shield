@@ -40,13 +40,16 @@ export async function scanForViruses(filePath) {
    return new Promise((resolve, reject) => {
       const pythonProcess = spawn('python', [path.join(ENGINE_PATH, 'file_analyzer.py'), filePath]);
       let dataString = '';
+      let errorString = '';
 
       pythonProcess.stdout.on('data', (data) => {
         dataString += data.toString();
       });
 
       pythonProcess.stderr.on('data', (data) => {
-        console.error(`Analyzer Error: ${data}`);
+        const s = data.toString();
+        errorString += s;
+        console.error(`Analyzer Error: ${s}`);
       });
 
       pythonProcess.on('close', (code) => {
@@ -54,7 +57,12 @@ export async function scanForViruses(filePath) {
           const result = JSON.parse(dataString);
           resolve(result);
         } catch (e) {
-          resolve({ success: false, error: "Failed to parse analyzer output", threats: [] });
+          resolve({
+            success: false,
+            error: `Failed to parse analyzer output${errorString ? `: ${errorString.trim().slice(0, 400)}` : ''}`,
+            exitCode: code,
+            threats: []
+          });
         }
       });
     });

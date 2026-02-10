@@ -1,11 +1,18 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from werkzeug.exceptions import RequestEntityTooLarge
+from werkzeug.utils import secure_filename
 import hashlib
+import os
 
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
+
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+UPLOAD_FOLDER = os.path.abspath(os.path.join(BASE_DIR, 'uploads'))
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 CORS(app, resources={r"/scan-file": {"origins": "*"}})
 
@@ -23,8 +30,13 @@ def handle_file_too_large(_e):
 def scan_file():
     try:
         file = request.files['file']
-        data = file.read()
-        file.seek(0)
+        filename = secure_filename(file.filename or 'upload.bin')
+        abs_path = os.path.abspath(os.path.join(UPLOAD_FOLDER, filename))
+
+        file.save(abs_path)
+
+        with open(abs_path, 'rb') as f:
+            data = f.read()
 
         sha256_hash = hashlib.sha256(data).hexdigest()
         threats = []
@@ -38,7 +50,7 @@ def scan_file():
 
         result = {
             "success": True,
-            "fileName": file.filename,
+            "fileName": filename,
             "sha256": sha256_hash,
             "isSafe": len(threats) == 0,
             "threatCount": len(threats),
@@ -55,4 +67,3 @@ def scan_file():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True)
-

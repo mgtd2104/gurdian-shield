@@ -17,5 +17,4 @@ export class PasswordEntry {
   }
 }
 
-// In-memory storage for demo (replace with MongoDB)
 export const passwordStorage = new Map();

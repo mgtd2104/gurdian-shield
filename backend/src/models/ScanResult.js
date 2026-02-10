@@ -10,5 +10,4 @@ export class ScanResult {
   }
 }
 
-// In-memory storage for demo
 export const scanStorage = [];

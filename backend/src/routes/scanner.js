@@ -39,12 +39,14 @@ router.post('/virus', async (req, res) => {
 
     const file = req.files.file;
     // Use local temp directory to avoid OS path issues
-    const tempDir = path.join(process.cwd(), 'temp');
+    const tempDir = path.resolve(process.cwd(), 'temp');
     // Ensure temp dir exists (in case it wasn't created)
     if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir, { recursive: true });
     }
-    tempPath = path.join(tempDir, `${Date.now()}_${file.name}`);
+    const originalName = String(file.name || 'upload');
+    const safeName = path.basename(originalName).replace(/[^a-zA-Z0-9._-]/g, '_');
+    tempPath = path.join(tempDir, `${Date.now()}_${safeName}`);
 
     await file.mv(tempPath);
     const result = await scanForViruses(tempPath);
@@ -63,7 +65,7 @@ router.post('/virus', async (req, res) => {
     res.json({
       scanId: scanRecord.id,
       ...result,
-      fileName: file.name,
+      fileName: safeName,
       success: true
     });
   } catch (error) {
