@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
 
 import VulnerabilityScanner from './components/VulnerabilityScanner';
@@ -9,6 +9,21 @@ import Chatbot from './components/Chatbot';
 
 function App() {
   const [activeTab, setActiveTab] = useState('vulnerability');
+  const [buildInfo, setBuildInfo] = useState(null);
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const res = await fetch('/api/version');
+        const data = await res.json();
+        if (data && data.ok) {
+          setBuildInfo(data);
+        }
+      } catch {
+      }
+    };
+    run();
+  }, []);
 
   // ✅ Tab rendering
   const renderContent = () => {
@@ -91,6 +106,9 @@ function App() {
       {/* Footer */}
       <footer className="footer">
         <p>&copy; 2026 Guardian Shield - Your Security, Our Priority - by: mohit</p>
+        {buildInfo?.sha && (
+          <p>Build: {String(buildInfo.sha).slice(0, 7)} ({buildInfo.ref || 'unknown'})</p>
+        )}
       </footer>
     </div>
   );
