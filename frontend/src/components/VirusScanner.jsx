@@ -36,7 +36,7 @@ function VirusScannerInner() {
   const [error, setError] = useState('');
 
   const getMaxUploadBytes = () => {
-    return 16 * 1024 * 1024;
+    return 32 * 1024 * 1024;
   };
 
   const formatRemediationMessage = (value) => {
@@ -111,8 +111,10 @@ function VirusScannerInner() {
       }
 
     } catch (err) {
-      if (err?.response?.status === 413) {
-        setError('File is too large to scan (16MB limit).');
+      const status = err?.response?.status;
+      const message = String(err?.message || '');
+      if (status === 413 || message.includes('413')) {
+        setError('File too large or server error. Please try a smaller file.');
         return;
       }
       const serverPayload = err?.response?.data;
@@ -121,7 +123,11 @@ function VirusScannerInner() {
       } else if (typeof serverPayload === 'string' && serverPayload.trim().length) {
         setError(serverPayload.slice(0, 200));
       } else {
-        setError(err?.message || 'Scan failed');
+        if (file?.size && file.size > getMaxUploadBytes()) {
+          setError('File too large or server error. Please try a smaller file.');
+        } else {
+          setError(err?.message || 'Scan failed');
+        }
       }
     } finally {
       setLoading(false);
