@@ -18,7 +18,21 @@ def handle_file_too_large(_e):
     return jsonify({"error": "File exceeds 50MB limit."}), 413
 
 
+@app.errorhandler(404)
+def handle_not_found(_e):
+    return jsonify({"success": False, "error": "Not Found"}), 404
+
+
+@app.route('/', methods=['GET'])
+def healthcheck():
+    return jsonify({"ok": True, "service": "scan_file"}), 200
+
+
 @app.route('/', methods=['POST'])
+@app.route('/scan-file', methods=['POST'])
+@app.route('/scan_file', methods=['POST'])
+@app.route('/api/scan-file', methods=['POST'])
+@app.route('/api/scan_file', methods=['POST'])
 def scan_file():
     try:
         if 'file' not in request.files:
@@ -63,4 +77,3 @@ def scan_file():
         return jsonify({"error": str(e)}), 413
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-
