@@ -18,7 +18,15 @@ export default function PasswordAnalyzer() {
 
     try {
       const response = await passwordAPI.analyzePassword(password);
-      setAnalysis(response.data);
+      const data = response?.data;
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid response');
+      }
+      setAnalysis({
+        ...data,
+        requirements: data.requirements || {},
+        feedback: Array.isArray(data.feedback) ? data.feedback : []
+      });
       setError('');
     } catch (err) {
       setError(err.response?.data?.error || 'Analysis failed');
@@ -38,15 +46,39 @@ export default function PasswordAnalyzer() {
       setAnalysis(null);
       setError('');
     } catch (err) {
-      setError(err.response?.data?.error || 'Storage failed');
+      try {
+        const key = `guardianShield:storedPasswords:${userId}`;
+        const existing = JSON.parse(localStorage.getItem(key) || '[]');
+        const list = Array.isArray(existing) ? existing : [];
+        const entry = {
+          id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+          strength: Number(analysis?.strength || 0)
+        };
+        const next = [entry, ...list];
+        localStorage.setItem(key, JSON.stringify(next));
+        setStored(next);
+        setPassword('');
+        setAnalysis(null);
+        setError('');
+      } catch {
+        setError(err.response?.data?.error || 'Storage failed');
+      }
     }
   };
 
   const handleGenerate = async () => {
     try {
       const response = await passwordAPI.generatePassword(16, true);
-      setPassword(response.data.password);
-      setAnalysis(response.data);
+      const data = response?.data;
+      if (!data || typeof data !== 'object' || !data.password) {
+        throw new Error('Invalid response');
+      }
+      setPassword(String(data.password));
+      setAnalysis({
+        ...data,
+        requirements: data.requirements || {},
+        feedback: Array.isArray(data.feedback) ? data.feedback : []
+      });
       setError('');
     } catch (err) {
       setError('Failed to generate password');
@@ -115,14 +147,14 @@ export default function PasswordAnalyzer() {
 
             <div className="requirements">
               <h4>Requirements:</h4>
-              {Object.entries(analysis.requirements).map(([req, met]) => (
+              {Object.entries(analysis?.requirements || {}).map(([req, met]) => (
                 <div key={req} className={`requirement ${met ? 'met' : 'unmet'}`}>
                   <span>{met ? '✅' : '❌'} {req}</span>
                 </div>
               ))}
             </div>
 
-            {analysis.feedback && (
+            {Array.isArray(analysis?.feedback) && analysis.feedback.length > 0 && (
               <div className="feedback">
                 <h4>Suggestions:</h4>
                 {analysis.feedback.map((tip, idx) => (
