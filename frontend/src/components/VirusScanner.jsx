@@ -79,12 +79,13 @@ function VirusScannerInner() {
 
     try {
       const response = await scannerAPI.scanVirus(file);
-      const data = response?.data;
+      const raw = response?.data;
+      const data = (raw && typeof raw === 'object' && raw.data && typeof raw.data === 'object') ? raw.data : raw;
       if (!data || typeof data !== 'object') {
         throw new Error('Invalid scan response');
       }
 
-      if (data.success === false) {
+      if (data.success === false || typeof data.error === 'string') {
         throw new Error(data.error || 'Scan failed');
       }
 

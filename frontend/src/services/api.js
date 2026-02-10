@@ -14,7 +14,7 @@ export const scannerAPI = {
   scanVirus: (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post('/scanner/virus', formData);
+    return api.post('/scan-file', formData);
   },
   getHistory: () => api.get('/scanner/history'),
   getScan: (id) => api.get(`/scanner/scan/${id}`)

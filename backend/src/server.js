@@ -53,7 +53,7 @@ const MALWARE_SHA256_HASHES = new Set([
   '275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f'
 ]);
 
-app.post('/scan-file', async (req, res) => {
+async function handleScanFile(req, res) {
   try {
     if (!req.files || !req.files.file) {
       return res.status(400).json({ status: 'error', error: 'No file uploaded' });
@@ -85,7 +85,10 @@ app.post('/scan-file', async (req, res) => {
   } catch (e) {
     return res.status(500).json({ error: String(e?.message || e) });
   }
-});
+}
+
+app.post('/scan-file', handleScanFile);
+app.post('/api/scan-file', handleScanFile);
 
 // Store io instance for use in routes
 app.set('io', io);
