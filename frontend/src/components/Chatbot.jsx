@@ -11,12 +11,23 @@ export default function Chatbot() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [topics, setTopics] = useState([]);
+  const [scanContext, setScanContext] = useState(null);
+  const [useScanContext, setUseScanContext] = useState(true);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     fetchTopics();
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('lastScanResult');
+      if (raw) setScanContext(JSON.parse(raw));
+    } catch {
+      return;
+    }
+  }, []);
 
   const fetchTopics = async () => {
     try {
@@ -34,7 +45,7 @@ export default function Chatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSendMessage = async (message = input) => {
+  const handleSendMessage = async (message = input, forceScan = false) => {
     if (!message.trim()) return;
 
     setMessages([...messages, { type: 'user', content: message }]);
@@ -42,11 +53,24 @@ export default function Chatbot() {
     setLoading(true);
 
     try {
+      const body = forceScan
+        ? { scanResult: scanContext }
+        : { message, scanResult: useScanContext ? scanContext : null };
+
       const res = await fetch(`${API_BASE}/chat/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message })
+        body: JSON.stringify(body)
       });
+
+      if (!res.ok) {
+        if (res.status === 413) {
+          throw new Error('File exceeds 50MB limit.');
+        }
+        const text = await res.text();
+        throw new Error(text || 'Server error');
+      }
+
       const data = await res.json();
       const botMessage = data?.response || {};
 
@@ -73,6 +97,38 @@ export default function Chatbot() {
         type: 'bot',
         content: 'Sorry, I encountered an error. Please try again.'
       }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExplainLastScan = async () => {
+    if (!scanContext) {
+      setMessages(prev => [...prev, { type: 'bot', content: 'No recent scan result found. Run a scan first, then come back here.' }]);
+      return;
+    }
+
+    setMessages(prev => [...prev, { type: 'user', content: 'Explain my latest scan results' }]);
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/chat/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scanResult: scanContext })
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'Server error');
+      }
+
+      const data = await res.json();
+      const botMessage = data?.response || {};
+      const botContent = botMessage.message || 'I could not generate scan advice.';
+      setMessages(prev => [...prev, { type: 'bot', content: botContent }]);
+    } catch {
+      setMessages(prev => [...prev, { type: 'bot', content: 'Sorry, I encountered an error. Please try again.' }]);
     } finally {
       setLoading(false);
     }
@@ -137,10 +193,28 @@ export default function Chatbot() {
         </div>
       </div>
 
+      {scanContext && (
+        <div className="quick-topics">
+          <p>Scan context:</p>
+          <div className="topic-buttons">
+            <button className="topic-btn" onClick={handleExplainLastScan} disabled={loading}>
+              Explain latest scan
+            </button>
+            <button
+              className="topic-btn"
+              onClick={() => setUseScanContext((v) => !v)}
+              disabled={loading}
+            >
+              {useScanContext ? 'Context: ON' : 'Context: OFF'}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="input-group">
         <input
           type="text"
-          placeholder="Ask me about security issues, vulnerabilities, passwords..."
+          aria-label="Ask about security issues"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}

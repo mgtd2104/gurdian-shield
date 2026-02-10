@@ -36,7 +36,7 @@ module.exports = async (req, res) => {
 
   const form = formidable({
     multiples: false,
-    maxFileSize: 32 * 1024 * 1024
+    maxFileSize: 50 * 1024 * 1024
   });
 
   form.parse(req, async (err, fields, files) => {
@@ -45,7 +45,7 @@ module.exports = async (req, res) => {
         const status = typeof err?.httpCode === 'number' ? err.httpCode : (typeof err?.statusCode === 'number' ? err.statusCode : 400);
         res.statusCode = status;
         const isTooLarge = status === 413 || String(err?.message || '').toLowerCase().includes('maxfilesize');
-        return res.json({ success: false, error: isTooLarge ? 'File exceeds the 32MB limit' : String(err.message || err) });
+        return res.json({ success: false, error: isTooLarge ? 'File exceeds the 50MB limit' : String(err.message || err) });
       }
 
       const file = files?.file;

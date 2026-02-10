@@ -192,7 +192,7 @@ export default function PasswordManager() {
         <div className="search-group">
           <input
             type="text"
-            placeholder="Search passwords..."
+            aria-label="Search passwords"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -217,7 +217,7 @@ export default function PasswordManager() {
               value={formData.site}
               onChange={(e) => setFormData({...formData, site: e.target.value})}
               required
-              placeholder="e.g., google.com"
+              aria-label="Website or service"
             />
           </div>
           <div className="form-group">
@@ -227,7 +227,7 @@ export default function PasswordManager() {
               value={formData.username}
               onChange={(e) => setFormData({...formData, username: e.target.value})}
               required
-              placeholder="your username or email"
+              aria-label="Username or email"
             />
           </div>
           <div className="form-group">
@@ -237,7 +237,7 @@ export default function PasswordManager() {
               value={formData.password}
               onChange={(e) => setFormData({...formData, password: e.target.value})}
               required
-              placeholder="your password"
+              aria-label="Password"
             />
           </div>
           <div className="form-group">
@@ -245,7 +245,7 @@ export default function PasswordManager() {
             <textarea
               value={formData.notes}
               onChange={(e) => setFormData({...formData, notes: e.target.value})}
-              placeholder="Additional notes..."
+              aria-label="Notes"
               rows="3"
             />
           </div>

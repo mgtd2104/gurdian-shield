@@ -102,7 +102,7 @@ export default function PasswordAnalyzer() {
         <div className="password-input-wrapper">
           <input
             type={showPassword ? 'text' : 'password'}
-            placeholder="Enter password"
+            aria-label="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleAnalyze()}

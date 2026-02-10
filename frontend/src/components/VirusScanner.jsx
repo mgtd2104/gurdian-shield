@@ -36,7 +36,7 @@ function VirusScannerInner() {
   const [error, setError] = useState('');
 
   const getMaxUploadBytes = () => {
-    return 32 * 1024 * 1024;
+    return 50 * 1024 * 1024;
   };
 
   const formatRemediationMessage = (value) => {
@@ -95,6 +95,16 @@ function VirusScannerInner() {
         isSafe: typeof data.isSafe === 'boolean' ? data.isSafe : !(Array.isArray(data.threats) && data.threats.length > 0)
       });
 
+      try {
+        localStorage.setItem('lastScanResult', JSON.stringify({
+          type: 'virus',
+          fileName: data.fileName || file?.name,
+          ...data
+        }));
+      } catch {
+        return;
+      }
+
       // Get remediation advice from Chatbot if threats found
       if (Array.isArray(data.threats) && data.threats.length > 0) {
         try {
@@ -114,7 +124,8 @@ function VirusScannerInner() {
       const status = err?.response?.status;
       const message = String(err?.message || '');
       if (status === 413 || message.includes('413')) {
-        setError('File too large or server error. Please try a smaller file.');
+        alert('File exceeds 50MB limit.');
+        setError('File exceeds 50MB limit.');
         return;
       }
       const serverPayload = err?.response?.data;
