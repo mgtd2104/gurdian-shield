@@ -9,6 +9,12 @@ export default function VirusScanner() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const getMaxUploadBytes = () => {
+    const hostname = (typeof window !== 'undefined' && window.location?.hostname) ? window.location.hostname : '';
+    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+    return isLocal ? 10 * 1024 * 1024 : 4 * 1024 * 1024;
+  };
+
   const formatRemediationMessage = (value) => {
     if (typeof value === 'string') return value;
     if (value && typeof value === 'object') {
@@ -25,8 +31,10 @@ export default function VirusScanner() {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        setError('File size exceeds 10MB limit');
+      const maxBytes = getMaxUploadBytes();
+      if (selectedFile.size > maxBytes) {
+        const mb = Math.floor(maxBytes / (1024 * 1024));
+        setError(`File size exceeds ${mb}MB limit`);
         return;
       }
       setFile(selectedFile);
