@@ -42,12 +42,9 @@ app.use(fileUpload({
   limitHandler: (req, res) => {
     res.status(413).json({ success: false, error: 'File exceeds the 50MB limit' });
   },
-  useTempFiles: true,
-  tempFileDir: path.resolve(process.cwd(), 'temp'),
+  useTempFiles: false,
   createParentPath: true
 }));
-
-fs.mkdirSync(path.resolve(process.cwd(), 'temp'), { recursive: true });
 
 const MALWARE_SHA256_HASHES = new Set([
   '275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f'
@@ -60,8 +57,9 @@ async function handleScanFile(req, res) {
     }
 
     const file = req.files.file;
-    const filePath = path.resolve(String(file.tempFilePath || ''));
-    const buf = await fs.promises.readFile(filePath);
+    const buf = Buffer.isBuffer(file.data)
+      ? file.data
+      : await fs.promises.readFile(path.resolve(String(file.tempFilePath || '')));
     const { createHash } = await import('crypto');
     const sha256 = createHash('sha256').update(buf).digest('hex');
 

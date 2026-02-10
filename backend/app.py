@@ -29,34 +29,36 @@ def handle_file_too_large(_e):
 @app.route('/scan-file', methods=['POST'])
 def scan_file():
     try:
-        os.makedirs('temp', exist_ok=True)
+        if 'file' not in request.files:
+            return jsonify({"success": False, "error": "No file uploaded"}), 400
+
         file = request.files['file']
 
-        UPLOAD_FOLDER = os.path.join(os.getcwd(), 'backend', 'temp')
-        if not os.path.exists(UPLOAD_FOLDER):
-            os.makedirs(UPLOAD_FOLDER)
+        upload_folder = os.path.abspath(os.path.join(os.getcwd(), 'backend', 'temp'))
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder)
 
         original_name = file.filename or 'upload.bin'
-        filename = secure_filename(original_name) or 'upload.bin'
-        abs_upload_folder = os.path.abspath(UPLOAD_FOLDER)
-        abs_path = os.path.abspath(os.path.join(abs_upload_folder, filename))
 
-        file.save(abs_path)
+        try:
+            file_bytes = file.read()
+        except Exception as read_error:
+            return jsonify({
+                "success": False,
+                "error": f"Failed to read uploaded file from memory: {str(read_error)}",
+            }), 500
 
-        with open(abs_path, 'rb') as f:
-            data = f.read()
-
-        sha256_hash = hashlib.sha256(data).hexdigest()
+        file_hash = hashlib.sha256(file_bytes).hexdigest()
 
         known_bad_hashes = set(MALWARE_SHA256_HASHES)
         known_bad_hashes.add('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
 
         threats = []
-        if sha256_hash in known_bad_hashes:
+        if file_hash in known_bad_hashes:
             threats.append({
                 "type": "Known Malware",
                 "risk": "Critical",
-                "description": f"File hash matches known malware database. SHA256: {sha256_hash}",
+                "description": f"File hash matches known malware database. SHA256: {file_hash}",
                 "file": original_name,
             })
 
@@ -64,16 +66,16 @@ def scan_file():
         return jsonify({
             "success": True,
             "fileName": original_name,
-            "sha256": sha256_hash,
+            "sha256": file_hash,
             "isSafe": is_safe,
             "threatCount": len(threats),
             "threats": threats,
             "riskLevel": "Critical" if not is_safe else "Safe",
-        })
+        }), 200
     except RequestEntityTooLarge as e:
         return jsonify({"error": str(e)}), 413
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 if __name__ == '__main__':
