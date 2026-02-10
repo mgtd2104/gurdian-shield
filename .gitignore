@@ -1,0 +1,17 @@
+.vercel/
+node_modules/
+
+__pycache__/
+*.py[cod]
+*.log
+
+.env
+.env.*
+
+backend/data/
+backend/temp/
+backend/src/data/
+
+ersmohit_*
+mhAppData*
+
