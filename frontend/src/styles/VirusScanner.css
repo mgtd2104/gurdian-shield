@@ -41,3 +41,12 @@
 .file-info strong {
   color: #667eea;
 }
+
+.loading-message {
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  color: #856404;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}

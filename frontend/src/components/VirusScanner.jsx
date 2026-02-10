@@ -2,7 +2,33 @@ import React, { useState } from 'react';
 import { scannerAPI, chatAPI } from '../services/api';
 import '../styles/VirusScanner.css';
 
-export default function VirusScanner() {
+class VirusScannerErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, errorMessage: '' };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, errorMessage: error?.message || 'Virus scanner crashed.' };
+  }
+
+  componentDidCatch() {
+    return;
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="scanner-container">
+          <div className="error-message">{this.state.errorMessage}</div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function VirusScannerInner() {
   const [file, setFile] = useState(null);
   const [results, setResults] = useState(null);
   const [remediation, setRemediation] = useState(null);
@@ -85,7 +111,14 @@ export default function VirusScanner() {
       }
 
     } catch (err) {
-      setError(err.response?.data?.error || 'Scan failed');
+      const serverPayload = err?.response?.data;
+      if (serverPayload && typeof serverPayload === 'object' && typeof serverPayload.error === 'string') {
+        setError(serverPayload.error);
+      } else if (typeof serverPayload === 'string' && serverPayload.trim().length) {
+        setError(serverPayload.slice(0, 200));
+      } else {
+        setError(err?.message || 'Scan failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -111,6 +144,12 @@ export default function VirusScanner() {
       <button onClick={handleScan} disabled={loading || !file} className="btn-primary">
         {loading ? 'Scanning (checking hashes & patterns)...' : 'Scan File'}
       </button>
+
+      {loading && (
+        <div className="loading-message">
+          Scanning… if this takes longer than a few seconds, the server may be busy.
+        </div>
+      )}
 
       {error && <div className="error-message">{error}</div>}
 
@@ -167,5 +206,13 @@ export default function VirusScanner() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function VirusScanner() {
+  return (
+    <VirusScannerErrorBoundary>
+      <VirusScannerInner />
+    </VirusScannerErrorBoundary>
   );
 }

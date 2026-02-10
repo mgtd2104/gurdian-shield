@@ -53,6 +53,13 @@ app.use('/api/password', passwordRoutes);
 app.use('/api/password-manager', passwordManagerRoutes);
 app.use('/api/chat', chatRoutes);
 
+app.use((err, req, res, next) => {
+  const status = typeof err?.statusCode === 'number' ? err.statusCode : (typeof err?.status === 'number' ? err.status : 500);
+  const message = err?.message || 'Internal server error';
+  if (res.headersSent) return next(err);
+  res.status(status).json({ success: false, error: message });
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'Server is running' });
