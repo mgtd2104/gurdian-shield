@@ -95,7 +95,7 @@ export default function Chatbot() {
     } catch (err) {
       setMessages(prev => [...prev, {
         type: 'bot',
-        content: 'Sorry, I encountered an error. Please try again.'
+        content: 'Guardian Shield is currently in offline mode.'
       }]);
     } finally {
       setLoading(false);
@@ -170,6 +170,7 @@ export default function Chatbot() {
           {loading && (
             <div className="message bot">
               <div className="typing-indicator">
+                <div className="bot-text">Typing...</div>
                 <span></span><span></span><span></span>
               </div>
             </div>
