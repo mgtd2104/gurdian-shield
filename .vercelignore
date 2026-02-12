@@ -5,6 +5,7 @@
 /.git
 /docs
 /.cache
+/.npm
 
 node_modules/
 frontend/node_modules/
@@ -20,6 +21,7 @@ frontend/dist/
 docs/
 
 .cache/
+.npm/
 
 backend/temp/
 backend/data/

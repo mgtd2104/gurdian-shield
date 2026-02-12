@@ -2,13 +2,13 @@
   "version": 2,
   "functions": {
     "api/**/*.py": {
-      "excludeFiles": "**/{node_modules,frontend,backend,dist,docs,tests,.cache,venv,__pycache__}/**"
+      "excludeFiles": "**/{node_modules,frontend,backend,dist,docs,tests,.cache,.npm,venv,__pycache__}/**"
     }
   },
   "rewrites": [
     { "source": "/api/scan-file", "destination": "/api/scan_file" },
     { "source": "/api/(.*)", "destination": "/api/$1" }
   ],
-  "buildCommand": "npm --prefix frontend install && npm --prefix frontend run build",
+  "buildCommand": "npm --prefix frontend install && npm --prefix frontend run build && rm -rf frontend/node_modules",
   "outputDirectory": "frontend/dist"
 }
