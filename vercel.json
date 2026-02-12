@@ -2,8 +2,7 @@
   "version": 2,
   "functions": {
     "api/**/*.py": {
-      "includeFiles": "api/**",
-      "excludeFiles": "{node_modules/**,frontend/**,dist/**,.cache/**,docs/**,tests/**,backend/**,**/__pycache__/**,**/*.pyc}"
+      "excludeFiles": "**/{node_modules,frontend,backend,dist,docs,tests,.cache,venv,__pycache__}/**"
     }
   },
   "rewrites": [
