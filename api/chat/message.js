@@ -36,7 +36,7 @@ async function generate({ apiKey, apiVersion, modelId, prompt }) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+      system_instruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
       contents: [{ role: "user", parts: [{ text: prompt }] }]
     })
   });
