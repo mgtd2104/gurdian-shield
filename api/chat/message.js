@@ -25,9 +25,47 @@ async function listModels({ apiKey, apiVersion }) {
 
 function pickFallbackModelId(models) {
   const eligible = models.filter((m) => m.supportedGenerationMethods.includes("generateContent"));
-  const preferred = eligible.find((m) => m.name.includes("gemini-1.5-flash")) || eligible[0];
-  if (!preferred) return null;
-  return normalizeModelId(preferred.name);
+  const preference = [
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-001",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-pro",
+    "gemini-1.5-pro-001",
+    "gemini-flash-lite-latest",
+    "gemini-flash-latest",
+    "gemini-2.0-flash-lite",
+    "gemini-2.0-flash",
+    "gemini-2.5-flash"
+  ];
+
+  for (const id of preference) {
+    const match = eligible.find((m) => typeof m.name === "string" && m.name.includes(id));
+    if (match) return normalizeModelId(match.name);
+  }
+
+  if (!eligible.length) return null;
+  return normalizeModelId(eligible[0].name);
+}
+
+function alternateApiVersion(apiVersion) {
+  const v = String(apiVersion || "").trim();
+  if (v === "v1beta") return "v1";
+  return "v1beta";
+}
+
+function buildGeneratePayload({ apiVersion, contents }) {
+  const v = String(apiVersion || "").trim();
+  const payload = {
+    contents
+  };
+
+  if (v === "v1") {
+    payload.systemInstruction = { parts: [{ text: SYSTEM_INSTRUCTION }] };
+  } else {
+    payload.system_instruction = { parts: [{ text: SYSTEM_INSTRUCTION }] };
+  }
+
+  return payload;
 }
 
 function toTextParts(value) {
@@ -95,10 +133,7 @@ async function generate({ apiKey, apiVersion, modelId, contents, prompt }) {
   const resp = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      system_instruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-      contents: finalContents
-    })
+    body: JSON.stringify(buildGeneratePayload({ apiVersion, contents: finalContents }))
   });
 
   const text = await resp.text();
@@ -164,20 +199,28 @@ module.exports = async (req, res) => {
     contents = appendScanContext(contents, scanResult);
   }
   const configuredModel = normalizeModelId(process.env.GEMINI_MODEL);
-  const model = configuredModel || "gemini-1.5-flash";
-  const apiVersion = (process.env.GEMINI_API_VERSION || "v1beta").trim() || "v1beta";
+  const model = configuredModel || "gemini-flash-latest";
+  const preferredApiVersion = (process.env.GEMINI_API_VERSION || "v1beta").trim() || "v1beta";
 
   try {
     let data;
+    let apiVersionUsed = preferredApiVersion;
     try {
-      data = await generate({ apiKey, apiVersion, modelId: model, contents, prompt });
+      data = await generate({ apiKey, apiVersion: apiVersionUsed, modelId: model, contents, prompt });
     } catch (e) {
-      if (e?.status === 404) {
-        const models = await listModels({ apiKey, apiVersion });
+      const bodyText = String(e?.bodyText || "");
+      const isUnknownSystemInstruction = bodyText.includes('Unknown name "systemInstruction"');
+      const isUnknownSystemInstructionSnake = bodyText.includes('Unknown name "system_instruction"');
+
+      if (e?.status === 400 && (isUnknownSystemInstruction || isUnknownSystemInstructionSnake)) {
+        apiVersionUsed = alternateApiVersion(apiVersionUsed);
+        data = await generate({ apiKey, apiVersion: apiVersionUsed, modelId: model, contents, prompt });
+      } else if (e?.status === 404) {
+        const models = await listModels({ apiKey, apiVersion: apiVersionUsed });
         const fallback = pickFallbackModelId(models);
         if (fallback && fallback !== model) {
           console.error(`Gemini model not found: ${model}. Retrying with: ${fallback}`);
-          data = await generate({ apiKey, apiVersion, modelId: fallback, contents, prompt });
+          data = await generate({ apiKey, apiVersion: apiVersionUsed, modelId: fallback, contents, prompt });
         } else {
           const sample = models.slice(0, 15).map((m) => m.name).join(", ");
           console.error(`Gemini model not found: ${model}. Available models sample: ${sample}`);
