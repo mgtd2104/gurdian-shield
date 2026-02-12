@@ -93,9 +93,10 @@ export default function Chatbot() {
 
       setMessages(prev => [...prev, { type: 'bot', content: botContent }]);
     } catch (err) {
+      const msg = String(err?.message || '').trim();
       setMessages(prev => [...prev, {
         type: 'bot',
-        content: 'Guardian Shield is currently in offline mode.'
+        content: msg.length ? msg : 'Sorry, I encountered an error. Please try again.'
       }]);
     } finally {
       setLoading(false);
