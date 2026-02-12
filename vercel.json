@@ -1,5 +1,25 @@
 {
   "version": 2,
+  "functions": {
+    "api/**/*.py": {
+      "includeFiles": "api/**",
+      "excludeFiles": [
+        "backend/**",
+        "node_modules/**",
+        "frontend/node_modules/**",
+        "backend/venv/**",
+        ".git/**",
+        "dist/**",
+        "frontend/dist/**",
+        "docs/**",
+        "backend/temp/**",
+        "backend/data/**",
+        "backend/src/data/**",
+        "**/__pycache__/**",
+        "**/*.pyc"
+      ]
+    }
+  },
   "rewrites": [
     { "source": "/api/scan-file", "destination": "/api/scan_file" },
     { "source": "/api/(.*)", "destination": "/api/$1" }

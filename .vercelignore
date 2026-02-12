@@ -1,11 +1,26 @@
+/frontend/node_modules
+/node_modules
+/backend/venv
+/dist
+/.git
+/docs
+
 node_modules/
 frontend/node_modules/
 backend/node_modules/
+backend/venv/
+
+.git/
+.vercel/
+
+dist/
+frontend/dist/
 
 docs/
 
-verify_live.py
-
-.vercel/
 backend/temp/
+backend/data/
+backend/src/data/
 
+**/__pycache__/
+*.py[cod]
