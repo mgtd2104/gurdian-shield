@@ -4,6 +4,7 @@
 /dist
 /.git
 /docs
+/\.cache
 
 node_modules/
 frontend/node_modules/
@@ -17,6 +18,8 @@ dist/
 frontend/dist/
 
 docs/
+
+.cache/
 
 backend/temp/
 backend/data/
