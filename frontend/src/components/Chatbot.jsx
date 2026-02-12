@@ -14,9 +14,14 @@ export default function Chatbot() {
   const [scanContext, setScanContext] = useState(null);
   const [useScanContext, setUseScanContext] = useState(true);
   const messagesEndRef = useRef(null);
+  const messagesRef = useRef(messages);
 
   useEffect(() => {
     fetchTopics();
+  }, []);
+
+  useEffect(() => {
+    messagesRef.current = messages;
     scrollToBottom();
   }, [messages]);
 
@@ -45,17 +50,34 @@ export default function Chatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSendMessage = async (message = input, forceScan = false) => {
-    if (!message.trim()) return;
+  const toHistory = (chatMessages, limit = 10) => {
+    const normalized = (Array.isArray(chatMessages) ? chatMessages : [])
+      .filter((m) => m && typeof m.content === 'string' && m.content.trim())
+      .map((m) => ({
+        role: m.type === 'user' ? 'user' : 'model',
+        content: String(m.content)
+      }));
 
-    setMessages([...messages, { type: 'user', content: message }]);
+    return normalized.slice(Math.max(0, normalized.length - limit));
+  };
+
+  const handleSendMessage = async (message = input, forceScan = false) => {
+    const trimmed = String(message || '').trim();
+    if (!trimmed) return;
+
+    let nextMessages;
+    setMessages((prev) => {
+      nextMessages = [...prev, { type: 'user', content: trimmed }];
+      return nextMessages;
+    });
     setInput('');
     setLoading(true);
 
     try {
+      const history = toHistory(nextMessages || [...messagesRef.current, { type: 'user', content: trimmed }], 10);
       const body = forceScan
-        ? { scanResult: scanContext }
-        : { message, scanResult: useScanContext ? scanContext : null };
+        ? { message: trimmed, history, scanResult: scanContext }
+        : { message: trimmed, history, scanResult: useScanContext ? scanContext : null };
 
       const res = await fetch(`${API_BASE}/chat/message`, {
         method: 'POST',
@@ -109,14 +131,20 @@ export default function Chatbot() {
       return;
     }
 
-    setMessages(prev => [...prev, { type: 'user', content: 'Explain my latest scan results' }]);
+    const prompt = 'Explain my latest scan results';
+    let nextMessages;
+    setMessages((prev) => {
+      nextMessages = [...prev, { type: 'user', content: prompt }];
+      return nextMessages;
+    });
     setLoading(true);
 
     try {
+      const history = toHistory(nextMessages || [...messagesRef.current, { type: 'user', content: prompt }], 10);
       const res = await fetch(`${API_BASE}/chat/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scanResult: scanContext })
+        body: JSON.stringify({ message: prompt, history, scanResult: scanContext })
       });
 
       if (!res.ok) {

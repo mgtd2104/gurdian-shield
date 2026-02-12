@@ -30,14 +30,74 @@ function pickFallbackModelId(models) {
   return normalizeModelId(preferred.name);
 }
 
-async function generate({ apiKey, apiVersion, modelId, prompt }) {
+function toTextParts(value) {
+  const text = typeof value === "string" ? value : String(value ?? "");
+  const trimmed = text.trim();
+  return trimmed ? [{ text: trimmed }] : [];
+}
+
+function normalizeRole(role) {
+  const r = String(role || "").toLowerCase();
+  if (r === "assistant" || r === "bot" || r === "model") return "model";
+  return "user";
+}
+
+function normalizeHistory(history) {
+  if (!Array.isArray(history)) return [];
+  return history
+    .map((m) => {
+      if (!m) return null;
+      if (Array.isArray(m.parts) && typeof m.role === "string") {
+        return { role: normalizeRole(m.role), parts: m.parts };
+      }
+      const role = normalizeRole(m.role ?? m.type);
+      const content = m.content ?? m.text ?? m.message;
+      const parts = toTextParts(content);
+      if (!parts.length) return null;
+      return { role, parts };
+    })
+    .filter(Boolean);
+}
+
+function appendScanContext(contents, scanResult) {
+  if (scanResult === undefined || scanResult === null) return contents;
+
+  let scanText;
+  try {
+    scanText = `Scan context (JSON):\n${JSON.stringify(scanResult, null, 2)}`;
+  } catch {
+    scanText = `Scan context:\n${String(scanResult)}`;
+  }
+
+  for (let i = contents.length - 1; i >= 0; i -= 1) {
+    if (contents[i]?.role === "user") {
+      const existingText = contents[i]?.parts?.[0]?.text;
+      if (typeof existingText === "string") {
+        contents[i] = {
+          ...contents[i],
+          parts: [{ text: `${existingText.trim()}\n\n${scanText}` }]
+        };
+        return contents;
+      }
+      break;
+    }
+  }
+
+  return [...contents, { role: "user", parts: [{ text: scanText }] }];
+}
+
+async function generate({ apiKey, apiVersion, modelId, contents, prompt }) {
   const url = `https://generativelanguage.googleapis.com/${apiVersion}/models/${encodeURIComponent(modelId)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const finalContents = Array.isArray(contents) && contents.length
+    ? contents
+    : [{ role: "user", parts: [{ text: prompt }] }];
+
   const resp = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       system_instruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-      contents: [{ role: "user", parts: [{ text: prompt }] }]
+      contents: finalContents
     })
   });
 
@@ -94,8 +154,15 @@ module.exports = async (req, res) => {
   const body = req.body || {};
   const message = body.message;
   const scanResult = body.scanResult;
+  const history = body.history;
 
   const prompt = buildPrompt(message, scanResult);
+  let contents = normalizeHistory(history);
+  if (!contents.length) {
+    contents = [{ role: "user", parts: [{ text: prompt }] }];
+  } else {
+    contents = appendScanContext(contents, scanResult);
+  }
   const configuredModel = normalizeModelId(process.env.GEMINI_MODEL);
   const model = configuredModel || "gemini-1.5-flash";
   const apiVersion = (process.env.GEMINI_API_VERSION || "v1beta").trim() || "v1beta";
@@ -103,14 +170,14 @@ module.exports = async (req, res) => {
   try {
     let data;
     try {
-      data = await generate({ apiKey, apiVersion, modelId: model, prompt });
+      data = await generate({ apiKey, apiVersion, modelId: model, contents, prompt });
     } catch (e) {
       if (e?.status === 404) {
         const models = await listModels({ apiKey, apiVersion });
         const fallback = pickFallbackModelId(models);
         if (fallback && fallback !== model) {
           console.error(`Gemini model not found: ${model}. Retrying with: ${fallback}`);
-          data = await generate({ apiKey, apiVersion, modelId: fallback, prompt });
+          data = await generate({ apiKey, apiVersion, modelId: fallback, contents, prompt });
         } else {
           const sample = models.slice(0, 15).map((m) => m.name).join(", ");
           console.error(`Gemini model not found: ${model}. Available models sample: ${sample}`);
