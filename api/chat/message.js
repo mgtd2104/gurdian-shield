@@ -98,7 +98,7 @@ module.exports = async (req, res) => {
   const prompt = buildPrompt(message, scanResult);
   const configuredModel = normalizeModelId(process.env.GEMINI_MODEL);
   const model = configuredModel || "gemini-1.5-flash";
-  const apiVersion = (process.env.GEMINI_API_VERSION || "v1").trim() || "v1";
+  const apiVersion = (process.env.GEMINI_API_VERSION || "v1beta").trim() || "v1beta";
 
   try {
     let data;
