@@ -9,6 +9,6 @@
     { "source": "/api/scan-file", "destination": "/api/scan_file" },
     { "source": "/api/(.*)", "destination": "/api/$1" }
   ],
-  "buildCommand": "npm --prefix frontend install && npm --prefix frontend run build && rm -rf frontend/node_modules",
+  "buildCommand": "npm --prefix frontend install && npm --prefix frontend run build && node -e \"const fs=require('fs'); try { fs.rmSync('frontend/node_modules',{recursive:true,force:true}); } catch {}\"",
   "outputDirectory": "frontend/dist"
 }

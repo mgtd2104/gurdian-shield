@@ -2,7 +2,7 @@
   "name": "guardian-shield",
   "private": true,
   "scripts": {
-    "vercel-build": "npm --prefix frontend ci && npm --prefix frontend run build",
+    "vercel-build": "npm --prefix frontend ci && npm --prefix frontend run build && node -e \"const fs=require('fs'); try { fs.rmSync('frontend/node_modules',{recursive:true,force:true}); } catch {}\"",
     "build": "npm run vercel-build"
   },
   "dependencies": {
