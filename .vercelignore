@@ -4,6 +4,7 @@
 /dist
 /.git
 /docs
+/scripts
 /.cache
 /.npm
 

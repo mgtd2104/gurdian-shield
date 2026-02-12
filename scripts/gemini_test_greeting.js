@@ -1,4 +1,4 @@
-const handler = require("./message.js");
+const handler = require('../api/chat/message.js');
 
 function createRes() {
   return {
@@ -13,10 +13,10 @@ function createRes() {
 
 async function runOnce(text) {
   const req = {
-    method: "POST",
+    method: 'POST',
     body: {
       message: text,
-      history: [{ role: "user", content: text }]
+      history: [{ role: 'user', content: text }]
     }
   };
   const res = createRes();
@@ -25,8 +25,8 @@ async function runOnce(text) {
 }
 
 async function main() {
-  const hi = await runOnce("Hi");
-  const hello = await runOnce("Hello");
+  const hi = await runOnce('Hi');
+  const hello = await runOnce('Hello');
   console.log(JSON.stringify({ hi, hello }, null, 2));
 }
 

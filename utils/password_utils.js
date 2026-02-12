@@ -49,18 +49,18 @@ function timeToCrackString(entropy) {
 function scorePassword(password) {
   const requirements = {
     'Length >= 8': password.length >= 8,
-    'Uppercase': hasUpper(password),
-    'Lowercase': hasLower(password),
-    'Number': hasNumber(password),
-    'Special': hasSpecial(password)
+    Uppercase: hasUpper(password),
+    Lowercase: hasLower(password),
+    Number: hasNumber(password),
+    Special: hasSpecial(password)
   };
 
   let score = 0;
   score += Math.min(password.length, 20) * 2;
-  score += requirements['Uppercase'] ? 10 : 0;
-  score += requirements['Lowercase'] ? 10 : 0;
-  score += requirements['Number'] ? 10 : 0;
-  score += requirements['Special'] ? 10 : 0;
+  score += requirements.Uppercase ? 10 : 0;
+  score += requirements.Lowercase ? 10 : 0;
+  score += requirements.Number ? 10 : 0;
+  score += requirements.Special ? 10 : 0;
   score += password.length >= 12 ? 10 : 0;
   score += password.length >= 16 ? 10 : 0;
   score = Math.max(0, Math.min(100, score));
@@ -70,10 +70,10 @@ function scorePassword(password) {
 
   const feedback = [];
   if (!requirements['Length >= 8']) feedback.push('Use at least 8 characters (12+ recommended).');
-  if (!requirements['Uppercase']) feedback.push('Add at least one uppercase letter.');
-  if (!requirements['Lowercase']) feedback.push('Add at least one lowercase letter.');
-  if (!requirements['Number']) feedback.push('Add at least one number.');
-  if (!requirements['Special']) feedback.push('Add at least one special character.');
+  if (!requirements.Uppercase) feedback.push('Add at least one uppercase letter.');
+  if (!requirements.Lowercase) feedback.push('Add at least one lowercase letter.');
+  if (!requirements.Number) feedback.push('Add at least one number.');
+  if (!requirements.Special) feedback.push('Add at least one special character.');
 
   return {
     strength: score,

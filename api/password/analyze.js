@@ -1,4 +1,4 @@
-const { scorePassword } = require('./_utils');
+const { scorePassword } = require('../../utils/password_utils');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {

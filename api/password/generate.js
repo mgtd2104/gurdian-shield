@@ -1,4 +1,4 @@
-const { generatePassword, scorePassword } = require('./_utils');
+const { generatePassword, scorePassword } = require('../../utils/password_utils');
 
 module.exports = async (req, res) => {
   const lengthRaw = req.query?.length;
