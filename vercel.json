@@ -3,22 +3,7 @@
   "functions": {
     "api/**/*.py": {
       "includeFiles": "api/**",
-      "excludeFiles": [
-        "backend/**",
-        ".cache/**",
-        "node_modules/**",
-        "frontend/node_modules/**",
-        "backend/venv/**",
-        ".git/**",
-        "dist/**",
-        "frontend/dist/**",
-        "docs/**",
-        "backend/temp/**",
-        "backend/data/**",
-        "backend/src/data/**",
-        "**/__pycache__/**",
-        "**/*.pyc"
-      ]
+      "excludeFiles": "{node_modules/**,frontend/**,dist/**,.cache/**,docs/**,tests/**,backend/**,**/__pycache__/**,**/*.pyc}"
     }
   },
   "rewrites": [
